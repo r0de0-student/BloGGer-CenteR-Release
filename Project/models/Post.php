@@ -12,18 +12,15 @@ class Post {
     }
     
     public function getById($id) {
-        $stmt = $this->db->prepare("SELECT p.*, b.user_id as author_id, b.name as blog_name, u.name as author_name
-                                     FROM posts p 
-                                     JOIN blogs b ON p.blog_id = b.id 
-                                     JOIN users u ON b.user_id = u.id
-                                     WHERE p.id = ?");
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.name as author_name, b.user_id as author_id, b.name as blog_name
+            FROM posts p
+            JOIN blogs b ON p.blog_id = b.id
+            JOIN users u ON b.user_id = u.id
+            WHERE p.id = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch();
-    }
-    
-    public function incrementViews($postId) {
-        $stmt = $this->db->prepare("UPDATE posts SET views_count = views_count + 1 WHERE id = ?");
-        $stmt->execute([$postId]);
     }
     
     public function getByBlogId($blogId) {
@@ -33,12 +30,19 @@ class Post {
     }
     
     public function getAll() {
-        $stmt = $this->db->query("SELECT p.*, b.name as blog_name, u.name as author_name
-                                   FROM posts p 
-                                   JOIN blogs b ON p.blog_id = b.id 
-                                   JOIN users u ON b.user_id = u.id
-                                   ORDER BY p.created_at DESC");
+        $stmt = $this->db->query("
+            SELECT p.*, u.name as author_name, b.name as blog_name
+            FROM posts p
+            JOIN blogs b ON p.blog_id = b.id
+            JOIN users u ON b.user_id = u.id
+            ORDER BY p.created_at DESC
+        ");
         return $stmt->fetchAll();
+    }
+    
+    public function incrementViews($id) {
+        $stmt = $this->db->prepare("UPDATE posts SET views_count = views_count + 1 WHERE id = ?");
+        return $stmt->execute([$id]);
     }
     
     public function update($id, $title, $content) {
@@ -47,7 +51,55 @@ class Post {
     }
     
     public function delete($id) {
+        $stmt = $this->db->prepare("DELETE FROM comments WHERE post_id = ?");
+        $stmt->execute([$id]);
         $stmt = $this->db->prepare("DELETE FROM posts WHERE id = ?");
         return $stmt->execute([$id]);
     }
+    
+    // Для админа
+    public function getAllForAdmin() {
+        $stmt = $this->db->query("
+            SELECT p.*, u.name as author_name, b.name as blog_name
+            FROM posts p
+            LEFT JOIN blogs b ON p.blog_id = b.id
+            LEFT JOIN users u ON b.user_id = u.id
+            ORDER BY p.created_at DESC
+        ");
+        return $stmt->fetchAll();
+    }
+    
+    public function getByIdForAdmin($id) {
+        $stmt = $this->db->prepare("
+            SELECT p.*, b.user_id as author_id
+            FROM posts p
+            JOIN blogs b ON p.blog_id = b.id
+            WHERE p.id = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+    
+    public function deleteByAdmin($id) {
+        $stmt = $this->db->prepare("DELETE FROM comments WHERE post_id = ?");
+        $stmt->execute([$id]);
+        $stmt = $this->db->prepare("DELETE FROM posts WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+    
+    // Поиск
+    public function search($query) {
+        $search = "%$query%";
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.name as author_name, b.name as blog_name
+            FROM posts p
+            JOIN blogs b ON p.blog_id = b.id
+            JOIN users u ON b.user_id = u.id
+            WHERE p.title LIKE ? OR p.content LIKE ?
+            ORDER BY p.created_at DESC
+        ");
+        $stmt->execute([$search, $search]);
+        return $stmt->fetchAll();
+    }
 }
+?>

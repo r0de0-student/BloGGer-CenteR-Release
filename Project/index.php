@@ -1,6 +1,6 @@
 <?php
 session_start();
-define('BASE_PATH', '/blogger-center/Project/module-3');
+define('BASE_PATH', '/blogger-center/Project');
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/auth.php';
@@ -22,10 +22,19 @@ require_once __DIR__ . '/controllers/ExportController.php';
 $action = $_GET['action'] ?? 'home';
 
 switch ($action) {
+    // ========== ГОЛОВНАЯ СТРАНИЦА ==========
     case 'home':
         $controller = new HomeController($pdo);
         $controller->index();
         break;
+
+    // ========== ПОИСК ==========
+    case 'search':
+        $controller = new HomeController($pdo);
+        $controller->search();
+        break;
+
+    // ========== АУТЕНТИФИКАЦИЯ ==========
     case 'login':
         $controller = new AuthController($pdo);
         $controller->loginForm();
@@ -46,9 +55,11 @@ switch ($action) {
         $controller = new AuthController($pdo);
         $controller->logout();
         break;
+
+    // ========== СТАТЬИ И КОММЕНТАРИИ ==========
     case 'view-post':
         $controller = new PostController($pdo);
-        $controller->view($_GET['id']);
+        $controller->view($_GET['id'] ?? 0);
         break;
     case 'create-post':
         $controller = new PostController($pdo);
@@ -60,20 +71,26 @@ switch ($action) {
         break;
     case 'edit-post':
         $controller = new PostController($pdo);
-        $controller->editForm($_GET['id']);
+        $controller->editForm($_GET['id'] ?? 0);
         break;
     case 'do-update-post':
         $controller = new PostController($pdo);
-        $controller->update($_GET['id']);
+        $controller->update($_GET['id'] ?? 0);
         break;
     case 'delete-post':
         $controller = new PostController($pdo);
-        $controller->delete($_GET['id']);
+        $controller->delete($_GET['id'] ?? 0);
         break;
     case 'add-comment':
         $controller = new PostController($pdo);
-        $controller->addComment($_GET['id']);
+        $controller->addComment($_GET['id'] ?? 0);
         break;
+    case 'delete-comment':
+        $controller = new PostController($pdo);
+        $controller->deleteComment($_GET['id'] ?? 0);
+        break;
+
+    // ========== БЛОГИ ==========
     case 'my-blog':
         $controller = new BlogController($pdo);
         $controller->myBlog();
@@ -98,15 +115,40 @@ switch ($action) {
         $controller = new BlogController($pdo);
         $controller->allBlogs();
         break;
+
+    // ========== АДМИН-ПАНЕЛЬ ==========
     case 'admin-users':
-        $controller = new AdminController($pdo);
-        $controller->users();
+        $adminController = new AdminController($pdo);
+        $adminController->users();
         break;
-    case 'toggle-block':
-        $controller = new AdminController($pdo);
-        $controller->toggleBlock($_GET['id']);
+    case 'admin-toggle-block':
+        $adminController = new AdminController($pdo);
+        $adminController->toggleBlock($_GET['id'] ?? 0);
         break;
-        // Reports
+    case 'admin-update-role':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adminController = new AdminController($pdo);
+            $adminController->updateRole($_POST['user_id'] ?? 0, $_POST['role'] ?? 'author');
+        }
+        break;
+    case 'admin-posts':
+        $adminController = new AdminController($pdo);
+        $adminController->posts();
+        break;
+    case 'admin-delete-post':
+        $adminController = new AdminController($pdo);
+        $adminController->deletePost($_GET['id'] ?? 0);
+        break;
+    case 'admin-comments':
+        $adminController = new AdminController($pdo);
+        $adminController->comments();
+        break;
+    case 'admin-delete-comment':
+        $adminController = new AdminController($pdo);
+        $adminController->deleteComment($_GET['id'] ?? 0);
+        break;
+
+    // ========== ОТЧЁТЫ ==========
     case 'reports':
         $controller = new ReportController($pdo);
         $controller->index();
@@ -127,10 +169,8 @@ switch ($action) {
         $controller = new ReportController($pdo);
         $controller->authorStats();
         break;
-    case 'access-denied':
-        require_once __DIR__ . '/views/error/access-denied.php';
-        break;
-        // Export
+
+    // ========== ЭКСПОРТ ==========
     case 'export-users-excel':
         $controller = new ExportController($pdo);
         $controller->usersToExcel();
@@ -155,6 +195,13 @@ switch ($action) {
         $controller = new ExportController($pdo);
         $controller->topBlogsToWord();
         break;
+
+    // ========== ОШИБКИ ==========
+    case 'access-denied':
+        require_once __DIR__ . '/views/error/access-denied.php';
+        break;
+
+    // ========== ПО УМОЛЧАНИЮ ==========
     default:
         header('Location: ' . BASE_PATH . '/?action=home');
         break;
