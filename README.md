@@ -56,10 +56,14 @@ git clone https://github.com/r0de0-student/BloGGer-CenteR.git
  - И перенести в заранее подготовленную папку /xampp/htdocs/blogger-center/
  - Запустить Apache и MySQL 
  - Проверить работу веб-приложения по ссылке http://localhost/blogger-center/Project/module-3/?action=home
-
+```
 
 ### Автор: 
 Гармонов Р.А., ПИб-242
 
 ### Ссылка на проверку результатов: 
 https://docs.google.com/spreadsheets/d/1n_S58MZZfVKRg1aMpdrzWe29fnXVAYm5FGwkpO8Lnsk/edit?gid=0#gid=0
+
+
+### Ссылка на прошлый репозиторий:
+https://github.com/r0de0-student/BloGGer-CenteR
